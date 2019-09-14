@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-class Player {
+class Actions {
   constructor(player) {
     this.name = player.name;
     this.uuid = player.uuid;
@@ -280,3 +280,5 @@ class Player {
       });
   }
 }
+
+module.exports = Actions;
