@@ -7,7 +7,7 @@ class Team {
     this.roomSize = room.size;
   }
 
-  addMember(memeber) {
+  addMember(member) {
     const player = new Explorer(member, this.explored, this.roomSize);
     this.members[member.uuid] = player;
   }

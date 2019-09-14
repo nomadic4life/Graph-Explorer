@@ -31,10 +31,10 @@ class Explorer {
   initiateNextMove(direction) {
     this.createNode(direction);
     current = this.visited[this.currentStatus.room_id];
-    return this.simpleMove(current);
+    return this.simpleMoveType(current);
   }
 
-  simpleMove(current) {
+  simpleMoveType(current) {
     for (e of this.currentStatus.exits) {
       if (current.exits[e]) {
         return current.exits[e];
