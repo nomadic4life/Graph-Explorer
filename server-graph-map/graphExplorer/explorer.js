@@ -54,15 +54,8 @@ class Explorer {
   }
 
   simpleMoveType(current) {
-    // console.log(this.currentStatus);
     for (let e of this.currentStatus.exits) {
       if (typeof current.exits[e] === "boolean" && current.exits[e] === false) {
-        // console.log(
-        //   current,
-        //   e,
-        //   typeof current.exits[e],
-        //   current.exits[e] === false
-        // );
         return e;
       }
     }
@@ -128,14 +121,22 @@ class Explorer {
     } else return false;
   }
 
-  nextMove() {
+  nextMove(direction) {
     const nextMove = this.simpleMoveType(
       this.visited[this.currentStatus.room_id]
     );
 
+    console.log(nextMove);
     console.log(this.exploreStack);
 
     if ("nswe".includes(nextMove)) {
+      console.log(nextMove, "inside of if");
+      if (this.exploreStack.length === 0) {
+        this.exploreStack.push({
+          enterFrom: this.reverseDirection(direction),
+          prevRoom: this.prevStatus.room_id
+        });
+      }
       this.exploreStack.push({
         enterFrom: this.reverseDirection(nextMove),
         prevRoom: this.currentStatus.room_id
@@ -152,6 +153,23 @@ class Explorer {
     }
   }
 
+  updateNode(direction) {
+    if (
+      direction &&
+      this.visited[this.currentStatus.room_id].exits[
+        this.reverseDirection(direction)
+      ] === false
+    ) {
+      this.visited[this.currentStatus.room_id].exits[
+        this.reverseDirection(direction)
+      ] = this.prevStatus.room_id;
+      this.visited[this.prevStatus.room_id].exits[
+        direction
+      ] = this.currentStatus.room_id;
+    }
+    console.log(this.visited[this.currentStatus.room_id].exits);
+  }
+
   async explore({ direction, guess }) {
     // Depth First Traversal
     if (this.checkMapStatus()) return "Map is fully explored!";
@@ -159,13 +177,28 @@ class Explorer {
       `
       \n\tcurrent room ${this.currentStatus.room_id} 
       \twill move to the ${direction} 
-      \tthere are exits to the ${this.currentStatus.exits}\n
+      \tthere are exits to the ${this.currentStatus.exits}
+      \trooms visited ${Object.keys(this.visited).length}\n
       `
     );
+
     this.prevStatus = this.currentStatus;
     this.currentStatus = await this.move(direction, guess);
+
+    if (this.currentStatus.room_id === this.prevStatus.room_id) {
+      setTimeout(() => {
+        this.explore({
+          direction,
+          guess
+        });
+      }, this.currentStatus.cooldown * 1500);
+      return;
+    }
+
     if (!this.visited[this.currentStatus.room_id]) {
       this.createNode(direction);
+    } else {
+      this.updateNode(direction);
     }
 
     const { nextMove, newGuess } = this.nextMove(direction);
