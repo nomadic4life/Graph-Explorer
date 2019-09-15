@@ -238,17 +238,15 @@ class Explorer {
 
   initiateBFT() {
     this.initCurrentStatus(() => {
-      this.bft(this.currentStatus.room_id, 0, "room_id");
+      this.searchForDesination(this.currentStatus.room_id, 0, "room_id");
     });
   }
 
   searchType(type, destination, neighbor, direction) {
     switch (type) {
       case "room_id":
-        console.log(type, neighbor, destination, neighbor === destination);
         return neighbor === destination;
       case "title":
-        console.log("not here");
         return this.visited[neighbor].title === destination;
       case "neighbor":
         return this.visited[neighbor].exits[direction] === false;
@@ -257,30 +255,38 @@ class Explorer {
     }
   }
 
-  bft(start, destination, searchType) {
+  searchForDesination(start, destination, searchType) {
     const searchQueue = [];
     const visitedRooms = {};
-    searchQueue.push(start);
-
+    let node = {
+      room_id: start,
+      exits: this.visited[start].exits,
+      move: "start"
+    };
+    searchQueue.push(node);
     const paths = {};
     let path = [];
     while (searchQueue.length >= 1) {
       const room = searchQueue.pop();
       path.push(room);
-      visitedRooms[room] = true;
-      const neighbors = this.visited[room].exits;
+      visitedRooms[room.room_id] = true;
+      const neighbors = room.exits;
       for (let e in neighbors) {
         if (!visitedRooms[neighbors[e]]) {
-          path.push(neighbors[e]);
+          let node = {
+            room_id: neighbors[e],
+            exits: this.visited[neighbors[e]].exits,
+            move: e
+          };
+          path.push(node);
           paths[neighbors[e]] = [...path];
           path.pop();
-          searchQueue.unshift(neighbors[e]);
+          searchQueue.unshift(node);
         } else {
-          path = [...paths[room]];
+          path = [...paths[room.room_id]];
         }
 
         if (this.searchType(searchType, destination, neighbors[e], e)) {
-          console.log(path, searchType, destination, neighbors[e], e);
           return paths[destination];
         }
       }
