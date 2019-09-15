@@ -25,7 +25,6 @@ class Explorer {
 
   async initCurrentStatus(cb) {
     this.currentStatus = await this.player.init();
-    // console.log(this.currentStatus, "init");
     cb();
   }
 
@@ -194,7 +193,6 @@ class Explorer {
 
   async explore({ direction, guess }) {
     // Depth First Traversal
-    if (this.checkMapStatus()) return "Map is fully explored!";
     console.log(
       `
       \n\tcurrent room ${this.currentStatus.room_id} 
@@ -203,6 +201,7 @@ class Explorer {
       \trooms visited ${Object.keys(this.visited).length}\n
       `
     );
+    if (this.checkMapStatus()) return "Map is fully explored!";
 
     this.prevStatus = this.currentStatus;
     this.currentStatus = await this.move(direction, guess);
@@ -237,7 +236,47 @@ class Explorer {
     }
   }
 
-  bft() {}
+  initiateBFT() {
+    this.initCurrentStatus(() => {
+      this.bft(this.currentStatus.room_id, 0);
+    });
+  }
+
+  searchType(type = "room_id") {
+    // type
+    //  room_id
+    //  title
+    //  exit === false
+  }
+
+  bft(start, destination, options) {
+    const searchQueue = [];
+    const visitedRooms = {};
+    searchQueue.push(start);
+
+    const paths = {};
+    let path = [];
+    while (searchQueue.length >= 1) {
+      const room = searchQueue.pop();
+      path.push(room);
+      visitedRooms[room] = true;
+      const neighbors = this.visited[room].exits;
+      for (let e in neighbors) {
+        if (!visitedRooms[neighbors[e]]) {
+          path.push(neighbors[e]);
+          paths[neighbors[e]] = [...path];
+          path.pop();
+          searchQueue.unshift(neighbors[e]);
+        } else {
+          path = [...paths[room]];
+        }
+
+        if (this.searchType(options, destination, neighbors[e])) {
+          return paths[destination];
+        }
+      }
+    }
+  }
 }
 
 module.exports = Explorer;

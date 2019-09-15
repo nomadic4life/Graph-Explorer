@@ -16,7 +16,6 @@ class Team {
 
   async explore(playerUUID) {
     this.explored = (await this.updateExplored()) || {};
-    console.log(this.explored);
     this.members[playerUUID].activate(this.explored);
   }
 
