@@ -1,4 +1,6 @@
 const Explorer = require("./explorer");
+const jsonfile = require("jsonfile");
+const file = "./graphExplorer/data.json";
 
 class Team {
   constructor(room) {
@@ -12,12 +14,23 @@ class Team {
     this.members[member.uuid] = player;
   }
 
-  explore(playerUUID) {
-    this.members[playerUUID].activate();
+  async explore(playerUUID) {
+    this.explored = (await this.updateExplored()) || {};
+    console.log(this.explored);
+    this.members[playerUUID].activate(this.explored);
   }
 
   stopExplore(playerUUID) {
     this.members[playerUUID].deactivate();
+  }
+
+  updateExplored() {
+    return jsonfile
+      .readFile(file)
+      .then(obj => {
+        return obj;
+      })
+      .catch(error => console.error("logging error", error));
   }
 }
 

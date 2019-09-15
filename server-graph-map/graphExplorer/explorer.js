@@ -1,4 +1,6 @@
 const Action = require("./actions");
+const jsonfile = require("jsonfile");
+const file = "./graphExplorer/data.json";
 
 class Explorer {
   constructor(explorer, visited, roomSize) {
@@ -27,8 +29,9 @@ class Explorer {
     cb();
   }
 
-  activate() {
+  activate(explored) {
     // explore map
+    this.visited = explored;
     this.isExplore = true;
 
     this.initCurrentStatus(() => {
@@ -129,6 +132,14 @@ class Explorer {
     console.log(nextMove);
     console.log(this.exploreStack);
 
+    // might not use this. and might implement logic to handle this edgecase in bft
+    // if (this.currentStatus.exits.length === 1) {
+    //   this.exploreStack.push({
+    //     enterFrom: this.reverseDirection(direction),
+    //     prevRoom: this.prevStatus.room_id
+    //   });
+    // }
+
     if ("nswe".includes(nextMove)) {
       console.log(nextMove, "inside of if");
       if (this.exploreStack.length === 0) {
@@ -170,6 +181,17 @@ class Explorer {
     console.log(this.visited[this.currentStatus.room_id].exits);
   }
 
+  saveStatus() {
+    console.log("saving file");
+    return jsonfile
+      .writeFile(file, this.visited)
+      .then(res => {
+        console.log("saved file");
+        return res;
+      })
+      .catch(error => console.error(error));
+  }
+
   async explore({ direction, guess }) {
     // Depth First Traversal
     if (this.checkMapStatus()) return "Map is fully explored!";
@@ -200,6 +222,7 @@ class Explorer {
     } else {
       this.updateNode(direction);
     }
+    await this.saveStatus();
 
     const { nextMove, newGuess } = this.nextMove(direction);
     if (this.isExplore && nextMove) {

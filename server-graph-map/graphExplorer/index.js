@@ -10,9 +10,15 @@ testTeam.addMember({
 const test = async () => {
   const member = testTeam.members["956134b0f6795e31826098f7c7e9b37f7ecee4a1"];
   //   const data = await member.player.init();
-  const move = await member.activate();
+  //   const move = await member.activate();
+  const move = await testTeam.explore(
+    "956134b0f6795e31826098f7c7e9b37f7ecee4a1"
+  );
+
   //   const move = await member.move("s");
   //   console.log(move);
 };
 
 test();
+
+// testTeam.updateExplored();
