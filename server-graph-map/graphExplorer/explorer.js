@@ -1,49 +1,76 @@
-const Action = require("./action");
+const Action = require("./actions");
 
 class Explorer {
   constructor(explorer, visited, roomSize) {
     this.player = new Action(explorer);
+    this.isExplore = false;
     this.visited = visited;
-    this.currentStatus = this.player.init();
+    this.currentStatus = null;
     this.prevStatus = null;
     this.roomSize = roomSize;
+    this.exploreStack = [];
   }
 
-  move(direction, guess) {
+  async move(direction, guess) {
     if (!"nswe".includes(direction)) return "invalid direction";
 
     if (guess) {
-      return this.player.wiseMove(direction, guess);
+      return await this.player.wiseMove(direction, guess);
     } else {
-      return this.player.move(direction);
+      return await this.player.move(direction);
     }
+  }
+
+  async initCurrentStatus(cb) {
+    this.currentStatus = await this.player.init();
+    // console.log(this.currentStatus, "init");
+    cb();
   }
 
   activate() {
     // explore map
+    this.isExplore = true;
 
-    setTimeout(
-      () => this.dft(this.initiateNextMove()),
-      this.currentStatus.cooldown
-    );
+    this.initCurrentStatus(() => {
+      setTimeout(
+        () => this.explore(this.initiateStartMove()),
+        this.currentStatus.cooldown * 1000
+      );
+    });
   }
 
-  initiateNextMove(direction) {
-    this.createNode(direction);
-    current = this.visited[this.currentStatus.room_id];
-    return this.simpleMoveType(current);
-  }
-
-  simpleMoveType(current) {
-    for (e of this.currentStatus.exits) {
-      if (current.exits[e]) {
-        return current.exits[e];
-      }
+  initiateStartMove() {
+    if (!this.visited[this.currentStatus.room_id]) {
+      this.createNode();
+    }
+    const current = this.visited[this.currentStatus.room_id];
+    const hasUnvisitedNeighbors = this.simpleMoveType(current);
+    if ("nswe".includes(hasUnvisitedNeighbors)) {
+      return { direction: hasUnvisitedNeighbors };
+    } else {
+      const direction = this.bft(current);
+      return { direction };
     }
   }
 
+  simpleMoveType(current) {
+    // console.log(this.currentStatus);
+    for (let e of this.currentStatus.exits) {
+      if (typeof current.exits[e] === "boolean" && current.exits[e] === false) {
+        // console.log(
+        //   current,
+        //   e,
+        //   typeof current.exits[e],
+        //   current.exits[e] === false
+        // );
+        return e;
+      }
+    }
+    return false;
+  }
+
   createNode(direction) {
-    room = {
+    const room = {
       room_id: this.currentStatus.room_id,
       title: this.currentStatus.title,
       description: this.currentStatus.description,
@@ -68,17 +95,32 @@ class Explorer {
 
   setExits(direction) {
     const exits = {};
-    if (direction && this.visited[this.currentStatus.room_id] === undefined) {
+
+    if (direction) {
       exits[this.reverseDirection(direction)] = this.prevStatus.room_id;
-    }
-    for (i = 0; i < this.currentStatus.exits; i++) {
-      exits[this.currentStatus.exits[i]] = exits[i] || false;
+      this.visited[this.prevStatus.room_id].exits[
+        direction
+      ] = this.currentStatus.room_id;
     }
 
+    for (let e of this.currentStatus.exits) {
+      exits[e] =
+        exits[e] === undefined || exits[e] === false ? false : exits[e];
+    }
+    if (this.prevStatus)
+      console.log(
+        this.currentStatus.room_id,
+        exits,
+        "\n",
+        this.prevStatus.room_id,
+        this.visited[this.prevStatus.room_id].exits
+      );
     return exits;
   }
 
-  deactivate() {}
+  deactivate() {
+    this.isExplore = false;
+  }
 
   checkMapStatus() {
     if (Object.keys(this.visited).length === this.roomSize) {
@@ -86,8 +128,57 @@ class Explorer {
     } else return false;
   }
 
-  dft(direction, guess) {
+  nextMove() {
+    const nextMove = this.simpleMoveType(
+      this.visited[this.currentStatus.room_id]
+    );
+
+    console.log(this.exploreStack);
+
+    if ("nswe".includes(nextMove)) {
+      this.exploreStack.push({
+        enterFrom: this.reverseDirection(nextMove),
+        prevRoom: this.currentStatus.room_id
+      });
+      return { nextMove };
+    } else if (this.exploreStack.length > 0) {
+      const node = this.exploreStack.pop();
+      const nextMove = node.enterFrom;
+      const newGuess = node.prevRoom;
+      return { nextMove, newGuess };
+    } else {
+      // implement bft???
+      console.log("should do some bft here");
+    }
+  }
+
+  async explore({ direction, guess }) {
+    // Depth First Traversal
     if (this.checkMapStatus()) return "Map is fully explored!";
+    console.log(
+      `
+      \n\tcurrent room ${this.currentStatus.room_id} 
+      \twill move to the ${direction} 
+      \tthere are exits to the ${this.currentStatus.exits}\n
+      `
+    );
+    this.prevStatus = this.currentStatus;
+    this.currentStatus = await this.move(direction, guess);
+    if (!this.visited[this.currentStatus.room_id]) {
+      this.createNode(direction);
+    }
+
+    const { nextMove, newGuess } = this.nextMove(direction);
+    if (this.isExplore && nextMove) {
+      setTimeout(
+        () =>
+          this.explore({
+            direction: nextMove,
+            guess: newGuess ? String(newGuess) : undefined
+          }),
+        this.currentStatus.cooldown * 1000
+      );
+    }
   }
 
   bft() {}

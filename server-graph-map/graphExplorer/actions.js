@@ -4,6 +4,7 @@ class Actions {
   constructor(player) {
     this.name = player.name;
     this.uuid = player.uuid;
+    // this.cd = 5;
     this.request = axios.create({
       baseURL: player.URL || "http://localhost:8000/api",
       headers: {
