@@ -50,8 +50,8 @@ class Explorer {
     if ("nswe".includes(hasUnvisitedNeighbors)) {
       return { direction: hasUnvisitedNeighbors };
     } else {
-      const direction = this.bft(current);
-      return { direction };
+      // const direction = this.bft(current);
+      // return { direction };
     }
   }
 
@@ -76,6 +76,10 @@ class Explorer {
     };
 
     this.visited[room.room_id] = room;
+
+    if (room.title === "Shop") {
+      this.visited["Shop"] = room.room_id;
+    }
   }
 
   reverseDirection(direction) {
@@ -102,14 +106,7 @@ class Explorer {
       exits[e] =
         exits[e] === undefined || exits[e] === false ? false : exits[e];
     }
-    if (this.prevStatus)
-      console.log(
-        this.currentStatus.room_id,
-        exits,
-        "\n",
-        this.prevStatus.room_id,
-        this.visited[this.prevStatus.room_id].exits
-      );
+
     return exits;
   }
 
@@ -123,7 +120,7 @@ class Explorer {
     } else return false;
   }
 
-  nextMove(direction) {
+  async nextMove(direction) {
     const nextMove = this.simpleMoveType(
       this.visited[this.currentStatus.room_id]
     );
@@ -131,16 +128,7 @@ class Explorer {
     console.log(nextMove);
     console.log(this.exploreStack);
 
-    // might not use this. and might implement logic to handle this edgecase in bft
-    // if (this.currentStatus.exits.length === 1) {
-    //   this.exploreStack.push({
-    //     enterFrom: this.reverseDirection(direction),
-    //     prevRoom: this.prevStatus.room_id
-    //   });
-    // }
-
     if ("nswe".includes(nextMove)) {
-      console.log(nextMove, "inside of if");
       if (this.exploreStack.length === 0) {
         this.exploreStack.push({
           enterFrom: this.reverseDirection(direction),
@@ -158,8 +146,24 @@ class Explorer {
       const newGuess = node.prevRoom;
       return { nextMove, newGuess };
     } else {
-      // implement bft???
-      console.log("should do some bft here");
+      return await this.search(
+        this.currentStatus.room_id,
+        false,
+        "neighbor",
+        path => {
+          path.shift();
+          for (let element of path) {
+            this.exploreStack.unshift({
+              enterFrom: element.move,
+              prevRoom: element.room_id
+            });
+          }
+          const node = this.exploreStack.pop();
+          const nextMove = node.enterFrom;
+          const newGuess = node.prevRoom;
+          return { nextMove, newGuess };
+        }
+      );
     }
   }
 
@@ -177,15 +181,12 @@ class Explorer {
         direction
       ] = this.currentStatus.room_id;
     }
-    console.log(this.visited[this.currentStatus.room_id].exits);
   }
 
   saveStatus() {
-    console.log("saving file");
     return jsonfile
       .writeFile(file, this.visited)
       .then(res => {
-        console.log("saved file");
         return res;
       })
       .catch(error => console.error(error));
@@ -221,18 +222,21 @@ class Explorer {
     } else {
       this.updateNode(direction);
     }
-    await this.saveStatus();
+    // console.log(this.currentStatus);
+    // await this.saveStatus();
 
-    const { nextMove, newGuess } = this.nextMove(direction);
+    const { nextMove, newGuess } = await this.nextMove(direction);
     if (this.isExplore && nextMove) {
-      setTimeout(
-        () =>
-          this.explore({
-            direction: nextMove,
-            guess: newGuess ? String(newGuess) : undefined
-          }),
-        this.currentStatus.cooldown * 1000
-      );
+      this.checkRoom(() => {
+        setTimeout(
+          () =>
+            this.explore({
+              direction: nextMove,
+              guess: newGuess ? String(newGuess) : undefined
+            }),
+          this.currentStatus.cooldown * 1000
+        );
+      });
     }
   }
 
@@ -253,6 +257,10 @@ class Explorer {
       default:
         return false;
     }
+  }
+
+  search(start, destination, searchType, cb) {
+    return cb(this.searchForDesination(start, destination, searchType));
   }
 
   searchForDesination(start, destination, searchType) {
@@ -290,6 +298,22 @@ class Explorer {
           return paths[destination];
         }
       }
+    }
+  }
+
+  async checkRoom(cb) {
+    console.log(this.currentStatus.items.length, "testing length");
+    if (this.currentStatus.items.length !== 0) {
+      setTimeout(async () => {
+        this.currentStatus = await this.player.take(
+          this.currentStatus.items.shift()
+        );
+
+        this.checkRoom(cb);
+      }, this.currentStatus.cooldown * 1000);
+    } else {
+      console.log(this.currentStatus, "checking the current status");
+      cb();
     }
   }
 }
