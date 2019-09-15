@@ -238,18 +238,26 @@ class Explorer {
 
   initiateBFT() {
     this.initCurrentStatus(() => {
-      this.bft(this.currentStatus.room_id, 0);
+      this.bft(this.currentStatus.room_id, 0, "room_id");
     });
   }
 
-  searchType(type = "room_id") {
-    // type
-    //  room_id
-    //  title
-    //  exit === false
+  searchType(type, destination, neighbor, direction) {
+    switch (type) {
+      case "room_id":
+        console.log(type, neighbor, destination, neighbor === destination);
+        return neighbor === destination;
+      case "title":
+        console.log("not here");
+        return this.visited[neighbor].title === destination;
+      case "neighbor":
+        return this.visited[neighbor].exits[direction] === false;
+      default:
+        return false;
+    }
   }
 
-  bft(start, destination, options) {
+  bft(start, destination, searchType) {
     const searchQueue = [];
     const visitedRooms = {};
     searchQueue.push(start);
@@ -271,7 +279,8 @@ class Explorer {
           path = [...paths[room]];
         }
 
-        if (this.searchType(options, destination, neighbors[e])) {
+        if (this.searchType(searchType, destination, neighbors[e], e)) {
+          console.log(path, searchType, destination, neighbors[e], e);
           return paths[destination];
         }
       }
