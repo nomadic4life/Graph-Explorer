@@ -26,302 +26,302 @@ class Actions {
     await new Promise(resolve => setTimeout(resolve, stallTime));
   }
 
-  async init(update, status, cooldown) {
-    await this.sleep(cooldown);
+  async init(ref) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "GET",
       url: "/adv/init/"
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async move(update, status, cooldown, direction) {
-    await this.sleep(cooldown);
+  async move(ref, direction) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/move/",
       data: { direction }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async wiseMove(update, status, cooldown, direction, next_room_id) {
-    await this.sleep(cooldown);
+  async wiseMove(ref, direction, next_room_id) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/move/",
       data: { direction, next_room_id }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async take(update, status, cooldown, name) {
-    await this.sleep(cooldown);
+  async take(ref, name) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/take/",
       data: { name }
     })
       .then(async res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async drop(update, status, cooldown, name) {
-    await this.sleep(cooldown);
+  async drop(ref, name) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/drop/",
       data: { name }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
         return update(res, "err");
       });
   }
 
-  async sell(update, status, cooldown, name, confirm) {
-    await this.sleep(cooldown);
+  async sell(ref, name, confirm) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/sell/",
       data: { name, confirm }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async status(update) {
-    await this.sleep(cooldown);
+  async status(ref) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/status/"
     })
       .then(res => {
-        return update(res, "player");
+        return ref.updateStatus(res, ref, "player");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async examine(update, status, cooldown, name) {
-    await this.sleep(cooldown);
+  async examine(ref, name) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/examine/",
       data: { name: [name] }
     })
       .then(res => {
-        return update(res, "object");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async wear(update, status, cooldown, name) {
-    await this.sleep(cooldown);
+  async wear(ref, name) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/wear/",
       data: { name: [name] }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async changeName(update) {
-    await this.sleep(cooldown);
+  async changeName(ref) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/change_name/",
       data: { name: this.name }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async pray(update) {
-    await this.sleep(cooldown);
+  async pray(ref) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/pray/"
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async fly(update, status, cooldown, direction) {
-    await this.sleep(cooldown);
+  async fly(ref, direction) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/fly/",
       data: { direction }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async dash(update, status, cooldown, direction, num_rooms) {
-    await this.sleep(cooldown);
+  async dash(ref, direction, num_rooms) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/dash/",
       data: { direction, num_rooms }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async carry(update, status, cooldown, name) {
-    await this.sleep(cooldown);
+  async carry(ref, name) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/carry/",
       data: { name: [name] }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async receive(update) {
-    await this.sleep(cooldown);
+  async receive(ref) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/receive/"
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async mine(update, status, cooldown, newProof) {
-    await this.sleep(cooldown);
+  async mine(ref, newProof) {
+    await this.sleep(ref.cooldown);
     return this.mineRequest({
       method: "POST",
       url: "/adv/bc/mine/",
       data: { proof: newProof }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async getLastProof(update) {
-    await this.sleep(cooldown);
+  async getLastProof(ref) {
+    await this.sleep(ref.cooldown);
     return this.mineRequest({
       method: "GET",
       url: "/adv/bc/last_proof/"
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async getBalance(update) {
-    await this.sleep(cooldown);
+  async getBalance(ref) {
+    await this.sleep(ref.cooldown);
     return this.mineRequest({
       method: "POST",
       url: "/adv/bc/get_balance/"
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 
-  async transmogrify(update, status, cooldown, name) {
-    await this.sleep(cooldown);
+  async transmogrify(ref, name) {
+    await this.sleep(ref.cooldown);
     return this.request({
       method: "POST",
       url: "/adv/transmogrify/",
       data: { name: [name] }
     })
       .then(res => {
-        return update(res, status, "room");
+        return ref.updateStatus(res, ref, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(err, status, "err");
+        return ref.updateStatus(err, ref, "err");
       });
   }
 }
