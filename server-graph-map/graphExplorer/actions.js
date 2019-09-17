@@ -1,10 +1,11 @@
 const axios = require("axios");
 
+// channels_client.trigger('channel-1', 'test_event', { message: "hello world" });
+
 class Actions {
   constructor(player) {
     this.name = player.name;
     this.uuid = player.uuid;
-    // this.cd = 5;
     this.request = axios.create({
       baseURL: player.URL || "http://localhost:8000/api",
       headers: {
@@ -21,263 +22,306 @@ class Actions {
     });
   }
 
-  init() {
+  async sleep(stallTime = 6000) {
+    await new Promise(resolve => setTimeout(resolve, stallTime));
+  }
+
+  async init(update, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "GET",
       url: "/adv/init/"
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  move(direction) {
+  async move(update, direction, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/move/",
       data: { direction }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  wiseMove(direction, next_room_id) {
+  async wiseMove(update, direction, next_room_id, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/move/",
       data: { direction, next_room_id }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  take(name) {
+  async take(update, name, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/take/",
       data: { name }
     })
-      .then(res => {
-        return res.data;
+      .then(async res => {
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  drop(name) {
+  async drop(update, name, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/drop/",
       data: { name }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
+        return update(res, "err");
       });
   }
 
-  sell(name, confirm) {
+  async sell(update, name, confirm, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/sell/",
       data: { name, confirm }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  status() {
+  async status(update, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/status/"
     })
       .then(res => {
-        return res.data;
+        return update(res, "player");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  examine(name) {
+  async examine(update, name, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/examine/",
       data: { name: [name] }
     })
       .then(res => {
-        return res.data;
+        return update(res, "object");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  wear(name) {
+  async wear(update, name, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/wear/",
       data: { name: [name] }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  changeName() {
+  async changeName(update, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/change_name/",
       data: { name: this.name }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  pray() {
+  async pray(update, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/pray/"
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  fly(direction) {
+  async fly(update, direction, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/fly/",
       data: { direction }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  dash(direction, num_rooms) {
+  async dash(update, direction, num_rooms, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/dash/",
       data: { direction, num_rooms }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  carry(name) {
+  async carry(update, name, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/carry/",
       data: { name: [name] }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  receive() {
+  async receive(update, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/receive/"
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  mine(newProof) {
+  async mine(update, newProof, cooldown) {
+    await this.sleep(cooldown);
     return this.mineRequest({
       method: "POST",
       url: "/adv/bc/mine/",
       data: { proof: newProof }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  getLastProof() {
+  async getLastProof(update, cooldown) {
+    await this.sleep(cooldown);
     return this.mineRequest({
       method: "GET",
       url: "/adv/bc/last_proof/"
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  getBalance() {
+  async getBalance(update, cooldown) {
+    await this.sleep(cooldown);
     return this.mineRequest({
       method: "POST",
       url: "/adv/bc/get_balance/"
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 
-  transmogrify(name) {
+  async transmogrify(update, name, cooldown) {
+    await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/transmogrify/",
       data: { name: [name] }
     })
       .then(res => {
-        return res.data;
+        return update(res, "room");
       })
       .catch(err => {
         console.log(err);
+        return update(res, "err");
       });
   }
 }
