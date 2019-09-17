@@ -26,22 +26,22 @@ class Actions {
     await new Promise(resolve => setTimeout(resolve, stallTime));
   }
 
-  async init(update, cooldown) {
+  async init(update, status, cooldown) {
     await this.sleep(cooldown);
     return this.request({
       method: "GET",
       url: "/adv/init/"
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async move(update, direction, cooldown) {
+  async move(update, status, cooldown, direction) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -49,15 +49,15 @@ class Actions {
       data: { direction }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async wiseMove(update, direction, next_room_id, cooldown) {
+  async wiseMove(update, status, cooldown, direction, next_room_id) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -65,15 +65,15 @@ class Actions {
       data: { direction, next_room_id }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async take(update, name, cooldown) {
+  async take(update, status, cooldown, name) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -81,15 +81,15 @@ class Actions {
       data: { name }
     })
       .then(async res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async drop(update, name, cooldown) {
+  async drop(update, status, cooldown, name) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -97,16 +97,16 @@ class Actions {
       data: { name }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
         return update(res, "err");
       });
   }
 
-  async sell(update, name, confirm, cooldown) {
+  async sell(update, status, cooldown, name, confirm) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -114,15 +114,15 @@ class Actions {
       data: { name, confirm }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async status(update, cooldown) {
+  async status(update) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -133,11 +133,11 @@ class Actions {
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async examine(update, name, cooldown) {
+  async examine(update, status, cooldown, name) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -149,11 +149,11 @@ class Actions {
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async wear(update, name, cooldown) {
+  async wear(update, status, cooldown, name) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -161,15 +161,15 @@ class Actions {
       data: { name: [name] }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async changeName(update, cooldown) {
+  async changeName(update) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -177,30 +177,30 @@ class Actions {
       data: { name: this.name }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async pray(update, cooldown) {
+  async pray(update) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/pray/"
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async fly(update, direction, cooldown) {
+  async fly(update, status, cooldown, direction) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -208,15 +208,15 @@ class Actions {
       data: { direction }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async dash(update, direction, num_rooms, cooldown) {
+  async dash(update, status, cooldown, direction, num_rooms) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -224,15 +224,15 @@ class Actions {
       data: { direction, num_rooms }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async carry(update, name, cooldown) {
+  async carry(update, status, cooldown, name) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -240,30 +240,30 @@ class Actions {
       data: { name: [name] }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async receive(update, cooldown) {
+  async receive(update) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
       url: "/adv/receive/"
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async mine(update, newProof, cooldown) {
+  async mine(update, status, cooldown, newProof) {
     await this.sleep(cooldown);
     return this.mineRequest({
       method: "POST",
@@ -271,45 +271,45 @@ class Actions {
       data: { proof: newProof }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async getLastProof(update, cooldown) {
+  async getLastProof(update) {
     await this.sleep(cooldown);
     return this.mineRequest({
       method: "GET",
       url: "/adv/bc/last_proof/"
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async getBalance(update, cooldown) {
+  async getBalance(update) {
     await this.sleep(cooldown);
     return this.mineRequest({
       method: "POST",
       url: "/adv/bc/get_balance/"
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 
-  async transmogrify(update, name, cooldown) {
+  async transmogrify(update, status, cooldown, name) {
     await this.sleep(cooldown);
     return this.request({
       method: "POST",
@@ -317,11 +317,11 @@ class Actions {
       data: { name: [name] }
     })
       .then(res => {
-        return update(res, "room");
+        return update(res, status, "room");
       })
       .catch(err => {
         console.log(err);
-        return update(res, "err");
+        return update(err, status, "err");
       });
   }
 }
