@@ -39,7 +39,7 @@ class Explorer {
       this.createNode();
     }
 
-    const { nextMove, newGuess } = await this.nextMove(direction);
+    const { nextMove, newGuess } = await this.nextMove();
 
     this.explore({ direction: nextMove, guess: newGuess });
   }
@@ -291,6 +291,7 @@ class Explorer {
 
   searchForDestination(destination = false) {
     const start = this.currentStatus.room_id;
+
     const visitedRooms = {};
 
     let node = {
@@ -298,6 +299,10 @@ class Explorer {
       exits: this.visited[start].exits,
       move: "start"
     };
+
+    let prevRoom = null;
+
+    let room = node;
 
     const searchQueue = [];
 
@@ -308,25 +313,33 @@ class Explorer {
     visitedQueue.push(start);
 
     while (searchQueue.length >= 1) {
-      const room = searchQueue.pop();
+      prevRoom = room.room_id;
+
+      room = searchQueue.pop();
+
       visitedQueue.push(room.room_id);
 
       visitedRooms[room.room_id] = {
         enterFrom: room.move,
+        // I think I need fix this???
         prevRoom: String(room.exits[this.reverseDirection(room.move)]) || null
       };
 
       if (room.room_id === destination) {
+        destination = destination || prevRoom;
         return this.stackUpPath({ visitedRooms, destination, visitedQueue });
       }
 
       const neighbors = room.exits;
 
       for (let e in neighbors) {
-        if (neighbors[e] !== null && !visitedRooms[neighbors[e]]) {
+        if (String(neighbors[e]) !== null && !visitedRooms[neighbors[e]]) {
           let node = {
             room_id: neighbors[e],
-            exits: this.visited[neighbors[e]].exits || { empty: null },
+            exits:
+              this.visited[neighbors[e]] === undefined
+                ? { empty: null }
+                : this.visited[neighbors[e]].exits || { empty: null },
             move: e
           };
 
