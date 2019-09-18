@@ -11,38 +11,14 @@ class Explorer {
     this.currentStatus = null;
     this.currentPlayerStatus = null;
     this.prevStatus = null;
+    this.counter = 0;
     this.roomSize = roomSize;
     this.exploreStack = [];
-  }
-
-  async move(direction, guess) {
-    if (!"nswe".includes(direction)) return "invalid direction";
-
-    this.prevStatus = this.currentStatus;
-
-    if (guess) {
-      return await this.player.wiseMove(this, direction, guess);
-    } else {
-      // console.log(this.currentStatus);
-      return await this.player.move(this, direction);
-    }
-  }
-
-  updateStatus(response, status, type) {
-    if (type === "room") {
-      status.currentStatus = response.data;
-    } else if (type === "player") {
-      status.currentPlayerStatus = response.data;
-    } else if (type === "object") {
-      // status = response.data;
-    } else if (type === "err") {
-      // status = response;
-    }
-    return response.data.cooldown * 1000;
+    this.desinations = {};
   }
 
   async activate(explored) {
-    // explore map
+    // Initiate to explore map
     console.log("\n\t ACTIVTING >>> explore maze map <<<");
 
     this.visited = explored;
@@ -51,16 +27,21 @@ class Explorer {
 
     this.cooldown = await this.player.init(this);
 
-    console.log(
-      this.currentStatus.room_id,
-      this.visited[this.currentStatus.room_id]
-    );
+    this.initializeExplore();
+  }
 
-    this.searchForDestination(445);
+  deactivate() {
+    this.isExplore = false;
+  }
 
-    // if (this.checkMapStatus()) return this.currentStatus.room_id;
-    // const move = await this.initiateStartMove();
-    // this.explore(move);
+  async initializeExplore() {
+    if (!this.visited[this.currentStatus.room_id]) {
+      this.createNode();
+    }
+
+    const { nextMove, newGuess } = await this.nextMove(direction);
+
+    this.explore({ direction: nextMove, guess: newGuess });
   }
 
   direction() {
@@ -72,68 +53,6 @@ class Explorer {
     };
   }
 
-  async initiateStartMove() {
-    if (!this.visited[this.currentStatus.room_id]) {
-      this.createNode();
-    }
-
-    const current = this.visited[this.currentStatus.room_id];
-
-    const hasUnvisitedNeighbors = this.simpleMoveType(current);
-
-    if ("nswe".includes(hasUnvisitedNeighbors)) {
-      return { direction: hasUnvisitedNeighbors, guess: undefined };
-    } else {
-      console.log("searching for closest unvisted neighbor");
-
-      return this.search(current.room_id, false, "neighbor", path => {
-        path.shift();
-
-        for (let element of path) {
-          this.exploreStack.unshift({
-            enterFrom: element.move,
-            prevRoom: element.room_id
-          });
-        }
-
-        const node = this.exploreStack.pop();
-
-        const nextMove = node.enterFrom;
-
-        const newGuess = node.prevRoom;
-
-        return { direction: nextMove, guess: String(newGuess) };
-      });
-    }
-  }
-
-  simpleMoveType(current) {
-    for (let e of this.currentStatus.exits) {
-      if (typeof current.exits[e] === "boolean" && current.exits[e] === false) {
-        return e;
-      }
-    }
-    return false;
-  }
-
-  createNode(direction) {
-    const room = {
-      room_id: this.currentStatus.room_id,
-      title: this.currentStatus.title,
-      description: this.currentStatus.description,
-      coordinates: this.currentStatus.coordinates,
-      elevation: this.currentStatus.elevation,
-      terrain: this.currentStatus.terrain,
-      exits: this.setExits(direction)
-    };
-
-    this.visited[room.room_id] = room;
-
-    if (room.title === "Shop") {
-      this.visited["Shop"] = room.room_id;
-    }
-  }
-
   reverseDirection(direction) {
     const reverse = {
       n: "s",
@@ -142,6 +61,25 @@ class Explorer {
       e: "w"
     };
     return reverse[direction];
+  }
+
+  checkMapStatus(direction) {
+    // might rename this func to describe what it does more accuretly
+    if (this.currentStatus && direction) {
+      console.log(
+        `
+        \n\tCurrent room ${this.currentStatus.room_id} 
+        Rooms visited ${Object.keys(this.visited).length}
+        There are exits to the ${this.currentStatus.exits}
+        Will move to the ${this.direction()[direction]}
+        Number of moves ${this.counter}\n
+        `
+      );
+    }
+
+    if (Object.keys(this.visited).length - 1 === this.roomSize) {
+      return true;
+    } else return false;
   }
 
   setExits(direction) {
@@ -162,25 +100,22 @@ class Explorer {
     return exits;
   }
 
-  deactivate() {
-    this.isExplore = false;
-  }
+  createNode(direction) {
+    const room = {
+      room_id: this.currentStatus.room_id,
+      title: this.currentStatus.title,
+      description: this.currentStatus.description,
+      coordinates: this.currentStatus.coordinates,
+      elevation: this.currentStatus.elevation,
+      terrain: this.currentStatus.terrain,
+      exits: this.setExits(direction)
+    };
 
-  checkMapStatus(direction) {
-    if (this.currentStatus && direction) {
-      console.log(
-        `
-        \n\tCurrent room ${this.currentStatus.room_id} 
-        Rooms visited ${Object.keys(this.visited).length}
-        There are exits to the ${this.currentStatus.exits}
-        Will move to the ${this.direction()[direction]}\n
-        `
-      );
+    this.visited[room.room_id] = room;
+
+    if (room.title === "Shop") {
+      this.desinations["Shop"] = room.room_id;
     }
-
-    if (Object.keys(this.visited).length - 1 === this.roomSize) {
-      return true;
-    } else return false;
   }
 
   updateNode(direction) {
@@ -199,6 +134,14 @@ class Explorer {
     }
   }
 
+  handleNode(direction) {
+    if (!this.visited[this.currentStatus.room_id]) {
+      this.createNode(direction);
+    } else {
+      this.updateNode(direction);
+    }
+  }
+
   saveStatus() {
     return jsonfile
       .writeFile(file, this.visited)
@@ -206,6 +149,41 @@ class Explorer {
         return res;
       })
       .catch(error => console.error(error));
+  }
+
+  updateStatus(response, status, type) {
+    if (type === "room") {
+      status.currentStatus = response.data;
+    } else if (type === "player") {
+      status.currentPlayerStatus = response.data;
+    } else if (type === "object") {
+      // status = response.data;
+    } else if (type === "err") {
+      // status = response;
+    }
+    return response.data.cooldown * 1000;
+  }
+
+  async move(direction, guess) {
+    if (!"nswe".includes(direction)) return "invalid direction";
+
+    this.prevStatus = this.currentStatus;
+
+    if (guess) {
+      return await this.player.wiseMove(this, direction, guess);
+    } else {
+      // console.log(this.currentStatus);
+      return await this.player.move(this, direction);
+    }
+  }
+
+  simpleMoveType(current) {
+    for (let e of this.currentStatus.exits) {
+      if (typeof current.exits[e] === "boolean" && current.exits[e] === false) {
+        return e;
+      }
+    }
+    return false;
   }
 
   async nextMove(direction) {
@@ -225,6 +203,10 @@ class Explorer {
     );
 
     if ("nswe".includes(nextMove)) {
+      if (!"nswe".includes(direction)) {
+        return { nextMove };
+      }
+
       if (this.exploreStack.length === 0) {
         this.exploreStack.push({
           enterFrom: this.reverseDirection(direction),
@@ -239,7 +221,7 @@ class Explorer {
 
       return { nextMove };
     } else {
-      if (this.exploreStack.length !== 0) {
+      if (this.exploreStack.length === 0) {
         this.searchForDestination(false);
       }
 
@@ -251,22 +233,31 @@ class Explorer {
         const newGuess = String(node.prevRoom);
         return { nextMove, newGuess };
       }
+      // if reach this point means all of map is explored and should enter into a different mode to travel the map
+      // collecting gold and automating other tasks
       return {};
     }
   }
 
   async explore({ direction, guess }) {
     // Depth First Traversal
+
+    if (!"nswe".includes(direction)) {
+      console.log("All Rooms Explored!!!");
+      return {};
+    } else if (!this.isExplore) {
+      return {};
+    }
+
+    this.counter++;
+
     this.checkMapStatus(direction);
+
     this.cooldown = await this.move(direction, guess);
 
-    await this.saveStatus();
+    this.handleNode(direction);
 
-    if (!this.visited[this.currentStatus.room_id]) {
-      this.createNode(direction);
-    } else {
-      this.updateNode(direction);
-    }
+    await this.saveStatus();
 
     // this.cooldown = await this.checkStatus();
 
@@ -275,26 +266,27 @@ class Explorer {
     // this.cooldown = await this.sellItem();
 
     const { nextMove, newGuess } = await this.nextMove(direction);
-    if (this.isExplore && nextMove) {
-      this.explore({
-        direction: nextMove,
-        guess: newGuess ? String(newGuess) : undefined
-      });
-    }
+
+    this.explore({
+      direction: nextMove,
+      guess: newGuess
+    });
   }
 
-  async queueUpPath({ visitedRooms, destination, visitedQueue }) {
+  async stackUpPath({ visitedRooms, destination, visitedQueue }) {
     let room = destination;
+
     while (visitedRooms[room].enterFrom !== "start") {
       this.exploreStack.push({
         prevRoom: room,
         enterFrom: visitedRooms[room].enterFrom
       });
+
       room = visitedRooms[room].prevRoom;
     }
     // send visitedQueue and desination and visitedRooms to client
-    const { nextMove: direction, newGuess: guess } = await this.nextMove();
-    setTimeout(() => this.explore({ direction, guess }), this.cooldown);
+    // const { nextMove: direction, newGuess: guess } = await this.nextMove();
+    // setTimeout(() => this.explore({ direction, guess }), this.cooldown);
   }
 
   searchForDestination(destination = false) {
@@ -325,7 +317,7 @@ class Explorer {
       };
 
       if (room.room_id === destination) {
-        return this.queueUpPath({ visitedRooms, destination, visitedQueue });
+        return this.stackUpPath({ visitedRooms, destination, visitedQueue });
       }
 
       const neighbors = room.exits;
@@ -367,62 +359,3 @@ class Explorer {
 }
 
 module.exports = Explorer;
-
-// function searchForDesination(start, destination, searchType) {
-//   const searchQueue = [];
-
-//   const visitedRooms = {};
-
-//   let node = {
-//     room_id: start,
-//     exits: this.visited[start].exits,
-//     move: "start"
-//   };
-
-//   searchQueue.push(node);
-
-//   const paths = {};
-
-//   let path = [];
-
-//   while (searchQueue.length >= 1) {
-//     const room = searchQueue.pop();
-
-//     path.push(room);
-
-//     visitedRooms[room.room_id] = true;
-
-//     const neighbors = room.exits;
-
-//     for (let e in neighbors) {
-//       if (!visitedRooms[neighbors[e]] && neighbors[e] !== false) {
-//         let node = {
-//           room_id: neighbors[e],
-//           exits: this.visited[neighbors[e]].exits,
-//           move: e
-//         };
-
-//         path.push(node);
-
-//         // console.log(room.room_id, path);
-
-//         paths[neighbors[e]] = [...path];
-
-//         path.pop();
-
-//         searchQueue.unshift(node);
-//       } else if (neighbors[e] !== false) {
-//         console.log(room.room_id, path);
-
-//         path = [...paths[room.room_id]];
-//       }
-
-//       // if (neighbors[e] === 257) console.log(neighbors[e], path);
-//       if (this.searchType(searchType, destination, neighbors[e], e)) {
-//         // console.log(path);
-//         // return path;
-//         return paths[destination];
-//       }
-//     }
-//   }
-// }
