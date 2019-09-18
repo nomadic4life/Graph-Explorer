@@ -222,7 +222,7 @@ class Explorer {
       return { nextMove };
     } else {
       if (this.exploreStack.length === 0) {
-        this.searchForDestination(false);
+        this.searchForDestination(0);
       }
 
       if (this.exploreStack.length > 0) {
@@ -326,7 +326,7 @@ class Explorer {
       };
 
       if (room.room_id === destination) {
-        destination = destination || prevRoom;
+        destination = destination === false ? prevRoom : destination;
         return this.stackUpPath({ visitedRooms, destination, visitedQueue });
       }
 
